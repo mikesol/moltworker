@@ -31,10 +31,7 @@ RUN ARCH="$(dpkg --print-architecture)" \
          rclone \
          ffmpeg \
          imagemagick \
-         software-properties-common \
-    && add-apt-repository -y ppa:xtradeb/apps \
-    && apt-get update \
-    && apt-get install -y --no-install-recommends chromium \
+         chromium \
     && mkdir -p /etc/apt/keyrings \
     && curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
          | dd of=/etc/apt/keyrings/githubcli-archive-keyring.gpg \
