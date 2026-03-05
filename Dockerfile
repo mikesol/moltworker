@@ -1,7 +1,7 @@
 FROM docker.io/cloudflare/sandbox:0.7.0
 
 # Install Node.js 22 (required by OpenClaw), rclone (R2 persistence),
-# GitHub CLI, and Chromium (browser automation)
+# GitHub CLI, Chromium, and a practical toolkit for coding/automation.
 # The base image has Node 20, we need to replace it with Node 22.
 ENV NODE_VERSION=22.13.1
 RUN ARCH="$(dpkg --print-architecture)" \
@@ -16,7 +16,21 @@ RUN ARCH="$(dpkg --print-architecture)" \
          ca-certificates \
          curl \
          gnupg \
+         git \
+         ripgrep \
+         jq \
+         less \
+         unzip \
+         zip \
+         file \
+         procps \
+         sqlite3 \
+         python3 \
+         python3-pip \
+         python3-venv \
          rclone \
+         ffmpeg \
+         imagemagick \
          chromium \
     && mkdir -p /etc/apt/keyrings \
     && curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
@@ -32,6 +46,11 @@ RUN ARCH="$(dpkg --print-architecture)" \
     && node --version \
     && npm --version \
     && gh --version \
+    && git --version \
+    && rg --version \
+    && jq --version \
+    && ffmpeg -version | head -n1 \
+    && convert --version | head -n1 \
     && chromium --version \
     && rm -rf /var/lib/apt/lists/*
 
@@ -40,7 +59,7 @@ RUN npm install -g pnpm
 
 # Install OpenClaw (formerly clawdbot/moltbot)
 # Pin to specific version for reproducible builds
-RUN npm install -g openclaw@2026.2.26 \
+RUN npm install -g openclaw@2026.3.2 \
     && openclaw --version
 
 # Create OpenClaw directories
@@ -50,7 +69,7 @@ RUN mkdir -p /root/.openclaw \
     && mkdir -p /root/clawd/skills
 
 # Copy startup script
-# Build cache bust: 2026-02-11-v30-rclone
+# Build cache bust: 2026-03-05-v31-tooling-pack
 COPY start-openclaw.sh /usr/local/bin/start-openclaw.sh
 RUN chmod +x /usr/local/bin/start-openclaw.sh
 
