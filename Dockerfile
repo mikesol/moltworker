@@ -1,8 +1,8 @@
 FROM docker.io/cloudflare/sandbox:0.7.0
 
-# Install Node.js 22 (required by OpenClaw) and rclone (for R2 persistence)
-# The base image has Node 20, we need to replace it with Node 22
-# Using direct binary download for reliability
+# Install Node.js 22 (required by OpenClaw), rclone (R2 persistence),
+# GitHub CLI, and Chromium (browser automation)
+# The base image has Node 20, we need to replace it with Node 22.
 ENV NODE_VERSION=22.13.1
 RUN ARCH="$(dpkg --print-architecture)" \
     && case "${ARCH}" in \
@@ -10,12 +10,30 @@ RUN ARCH="$(dpkg --print-architecture)" \
          arm64) NODE_ARCH="arm64" ;; \
          *) echo "Unsupported architecture: ${ARCH}" >&2; exit 1 ;; \
        esac \
-    && apt-get update && apt-get install -y xz-utils ca-certificates rclone \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+         xz-utils \
+         ca-certificates \
+         curl \
+         gnupg \
+         rclone \
+         chromium \
+    && mkdir -p /etc/apt/keyrings \
+    && curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+         | dd of=/etc/apt/keyrings/githubcli-archive-keyring.gpg \
+    && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+         > /etc/apt/sources.list.d/github-cli.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends gh \
     && curl -fsSLk https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-${NODE_ARCH}.tar.xz -o /tmp/node.tar.xz \
     && tar -xJf /tmp/node.tar.xz -C /usr/local --strip-components=1 \
     && rm /tmp/node.tar.xz \
     && node --version \
-    && npm --version
+    && npm --version \
+    && gh --version \
+    && chromium --version \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install pnpm globally
 RUN npm install -g pnpm
